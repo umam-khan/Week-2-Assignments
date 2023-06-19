@@ -18,8 +18,56 @@
  */
 const express = require('express');
 const fs = require('fs');
-const path = require('path');
+// const path = require('path');
 const app = express();
+app.use(express.json());
+
+const folderPath = "../02-nodejs/files"
 
 
+
+app.get("/files",(req,res)=>{
+  fs.readdir(folderPath, (err, files) => {
+    if (err) {
+      // console.error('Error reading folder:', err);
+      res.status(500).send("no folder")
+      return;
+    }
+  
+    // console.log('Files in the folder:', files);
+    res.status(200).send(files)
+  });
+})
+
+// app.listen(3000,()=>{
+//   console.log("server started")
+// })
+
+app.get("/file/:filename",(req,res)=>{
+  const { filename } = req.params;
+  if(filename){
+    finalpath = folderPath+"/"+filename
+  fs.readFile(finalpath,(err,data)=>{
+    if(err){
+      // console.log(err);
+      res.status(404).send("File not found")
+      return;
+
+            }
+            else{
+              // console.log(data);
+              res.status(200).send(data);
+            }
+  })
+  }
+  else{
+    res.status(500).send("No file specified");
+    return
+  }
+  
+})
+
+app.use('*', (req, res) => {
+  res.status(404).send('Route not found');
+});
 module.exports = app;
