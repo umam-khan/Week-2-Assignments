@@ -39,73 +39,92 @@
 
   Testing the server - run `npm run test-todoServer` command in terminal
  */
-  const express = require('express');
-const bodyParser = require('body-parser');
+const express = require("express");
+const bodyParser = require("body-parser");
 const fs = require("fs");
 const app = express();
 
-const todos = []; // Define 'todos' globally
-
 const router = express.Router();
 app.use(bodyParser.json());
-app.use("/",router);
+app.use("/", router);
 
-// ... your other code ...
+const dataPath = __dirname + "/data.json";
 
-router.get("/todos",(req,res)=>{
-  res.status(200).json(todos);
+// Read the initial todos from the data.json file
+let todos = [];
+
+fs.readFile(dataPath, "utf-8", (err, data) => {
+  if (!err) {
+    const jsonData = JSON.parse(data);
+    todos = jsonData.todos;
+  }
 });
 
-router.get("/todos/:id",(req,res)=>{
+router.get("/todos", (req, res) => {
+  res.status(200).send({ todos });
+});
+
+router.get("/todos/:id", (req, res) => {
   const id = +req.params.id;
-  const todo = todos.find( t => t.id === id)
-  if (!todo) {
-    res.status(404).send();
+  const todo = todos.find((t) => t.id === id);
+  if (todo) {
+    res.status(200).send(todo);
   } else {
-    res.json(todo);
+    res.status(404).send("Not found");
   }
 });
 
-router.post("/todos",(req,res)=>{
-  const newTodo = {
-    id: Math.floor(Math.random() * 1000000), // unique random id
-    title: req.body.title,
-    description: req.body.description
-  };
-  todos.push(newTodo);
-  res.status(201).json(newTodo);
+router.post("/todos", (req, res) => {
+  const todo = req.body;
+  const ctodo = { ...todo, id: Math.floor(Math.random() * 1000000) };
+  todos.push(ctodo);
+  writeDataToFile();
+  res.status(201).send("Todo added");
 });
 
-router.put("/todos/:id",(req,res)=>{
-  const body= req.body;
+router.put("/todos/:id", (req, res) => {
+  const body = req.body;
   const id = +req.params.id;
-  const todoIndex = todos.findIndex( t => t.id === id);
+  const todoIndex = todos.findIndex((t) => t.id === id);
   const todo = todos[todoIndex];
-  if(todo){
-    todos.splice(todoIndex, 1, {title : body.title, description : body.description});
-    res.json(todos[todoIndex]);
-  }
-  else{
-    res.status(404).send("not found");
+  if (todoIndex === -1) {
+    res.status(404).send("Not found");
+  } else {
+    todos.splice(todoIndex, 1, { ...body, id: id });
+    console.log(todo[todoIndex]);
+    writeDataToFile();
+    res.status(200).send("Updated");
   }
 });
 
-router.delete("/todos/:id",(req,res)=>{
+router.delete("/todos/:id", (req, res) => {
   const id = +req.params.id;
-  const todoIndex = todos.findIndex( t => t.id === id);
-  // const todo = todos[todoIndex];
-  if(todoIndex===-1){
-    res.status(404).send();
-  }
-  else{
-    res.status(404).send();
+  const todoIndex = todos.findIndex((t) => t.id === id);
+  const todo = todos[todoIndex];
+  if (todo) {
     todos.splice(todoIndex, 1);
-    res.status(200).send();
+    writeDataToFile();
+    res.status(200).send("Deleted");
+  } else {
+    res.status(404).send("Not found");
   }
 });
 
-app.use((req, res,next) => {
-  res.status(404).send();
+app.listen(3000, () => {
+  console.log("Server started");
 });
+
+app.use("*", (req, res) => {
+  res.status(404).send("Route not found");
+});
+
+function writeDataToFile() {
+  const jsonData = { todos };
+  fs.writeFile(dataPath, JSON.stringify(jsonData), "utf-8", (err) => {
+    if (err) {
+      console.error("Error writing data to file:", err);
+    }
+  });
+}
 
 module.exports = app;
