@@ -86,15 +86,8 @@ app.get("/data", (req, res) => {
     }
   }
 
+
   if (userFound) {
-    let usersToReturn = [];
-    for (let i = 0; i<users.length; i++) {
-        usersToReturn.push({
-            firstName: users[i].firstName,
-            lastName: users[i].lastName,
-            email: users[i].email
-        });
-    }
     res.json({
         users
     });
@@ -103,4 +96,7 @@ app.get("/data", (req, res) => {
   }
 });
 
+app.listen(3000,()=>{
+  console.log("server started")
+})
 module.exports = app;

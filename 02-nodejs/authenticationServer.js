@@ -29,9 +29,118 @@
   Testing the server - run `npm run test-authenticationServer` command in terminal
  */
 
-const express = require("express")
-const PORT = 3000;
-const app = express();
-// write your logic here, DONT WRITE app.listen(3000) when you're running tests, the tests will automatically start the server
-
-module.exports = app;
+  const express = require("express");
+  // const fs = require("fs");
+  const app = express();
+  
+  const router = express.Router();
+  app.use(express.json());
+  app.use("/", router);
+  
+  
+  
+  // Read the initial todos from the data.json file
+  let users = [];
+  
+  router.get("/users", (req, res) => {
+    res.status(200).send({ users: users });
+  });
+  
+  router.get("/todos/:id", (req, res) => {
+    const id = +req.params.id;
+    const todo = users.find((t) => t.id === id);
+    if (todo) {
+      res.status(200).send(todo);
+    } else {
+      res.status(404).send("Not found");
+    }
+  });
+  
+  router.post("/signup", (req, res) => {
+    const user = req.body;
+    const newUser = { ...user, id: Math.floor(Math.random() * 1000000) };
+    const userIndex = users.findIndex(u => u.id === newUser.id)
+    if(userIndex===-1){
+      users.push(newUser);
+      res.status(201).send("user added");
+    }
+    else{
+      res.send("user already exists")
+    }
+    
+    // writeDataToFile();
+    
+  });
+  router.post("/login", (req, res) => {
+    const usr = req.body
+    // const newUser = { ...user, id: Math.floor(Math.random() * 1000000) };
+    const userIndex = users.findIndex(u => u.password === usr.password)
+    if(userIndex===-1){
+      res.status(401).send("401 unauthorized");
+    }
+    else{
+      const user = users[userIndex];
+      const ansObj = {
+        id : user.id,
+        firstName : user.firstName,
+        lastName : user.lastName
+      }
+      res.status(200).send(ansObj)
+    }
+  });
+  
+  router.put("/todos/:id", (req, res) => {
+    const body = req.body;
+    const id = +req.params.id;
+    const todoIndex = users.findIndex((t) => t.id === id);
+    const todo = users[todoIndex];
+    if (todoIndex === -1) {
+      res.status(404).send("Not found");
+    } else {
+      users.splice(todoIndex, 1, { ...body, id: id });
+      writeDataToFile();
+      res.status(200).send("Updated");
+    }
+  });
+  app.get("/data", (req, res) => {
+    let password = req.headers.password;
+    const userIndex = users.findIndex(u => u.password === password)
+    if(userIndex===-1){
+      res.status(401).send("401 unauthorized");
+    }
+    else{
+      // const user = users[userIndex];
+      // const ansObj = {
+      //   id : user.id,
+      //   firstName : user.firstName,
+      //   lastName : user.lastName
+      // }
+      res.status(200).send({users})
+    }
+  });
+  
+  router.delete("/todos/:id", (req, res) => {
+    const id = +req.params.id;
+    const todoIndex = users.findIndex((t) => t.id === id);
+    const todo = users[todoIndex];
+    if (todo) {
+      users.splice(todoIndex, 1);
+      writeDataToFile();
+      res.status(200).send("Deleted");
+    } else {
+      res.status(404).send("Not found");
+    }
+  });
+  
+  app.listen(3000, () => {
+    console.log("Server started");
+  });
+  
+  app.use("*", (req, res) => {
+    res.status(404).send("Route not found");
+  });
+  
+  
+  
+  module.exports = app;
+  

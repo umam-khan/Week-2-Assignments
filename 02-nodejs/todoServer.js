@@ -40,12 +40,11 @@
   Testing the server - run `npm run test-todoServer` command in terminal
  */
 const express = require("express");
-const bodyParser = require("body-parser");
 const fs = require("fs");
 const app = express();
 
 const router = express.Router();
-app.use(bodyParser.json());
+app.use(express.json());
 app.use("/", router);
 
 const dataPath = __dirname + "/data.json";
@@ -91,7 +90,6 @@ router.put("/todos/:id", (req, res) => {
     res.status(404).send("Not found");
   } else {
     todos.splice(todoIndex, 1, { ...body, id: id });
-    console.log(todo[todoIndex]);
     writeDataToFile();
     res.status(200).send("Updated");
   }
