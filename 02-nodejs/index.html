@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Fetch Example</title>
+</head>
+<body>
+  <form id="todoForm">
+    <label for="title">Title:</label>
+    <input type="text" id="title" name="title" required><br><br>
+
+    <label for="description">Description:</label>
+    <textarea id="description" name="description" required></textarea><br><br>
+    <label for="title">delete id:</label>
+    <input type="text" id="delete" name="title"><br><br>
+  </form>
+
+  <div id="todoList"></div>
+
+  <button onclick="get()">Get Todos</button>
+  <button onclick="post()">Create Todo</button>
+  <button onclick="deletetodo()">delete Todo</button>
+
+  <script>
+    const todoListElement = document.getElementById('todoList');
+
+    const get = () => {
+      fetch('http://localhost:3000/todos')
+        .then(response => response.json())
+        .then(result => {
+          if (result && Array.isArray(result.todos)) {
+            renderTodos(result.todos);
+          } else {
+            console.error('Invalid response:', result);
+          }
+        })
+        .catch(error => {
+          console.error('Error:', error);
+        });
+    };
+
+    const post = () => {
+      const todo = {
+        title: document.getElementById('title').value,
+        description: document.getElementById('description').value
+      };
+
+      fetch('http://localhost:3000/todos', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(todo)
+      })
+        .then(response => response.json())
+        .then(result => {
+          console.log('Result:', result);
+          get(); // Refresh the todos after creating a new one
+        })
+        .catch(error => {
+          console.error('Error:', error);
+        });
+    };
+    const deletetodo = () => {
+  const deleteid = document.getElementById('delete').value;
+
+  fetch(`http://localhost:3000/todos/${deleteid}`, {
+    method: 'DELETE'
+  })
+    .then(response => {
+      if (response.ok) {
+        console.log('Todo deleted successfully');
+        get(); // Refresh the todos after deleting
+      } else {
+        console.error('Error deleting todo:', response.status);
+      }
+    })
+    .catch(error => {
+      console.error('Error:', error);
+    });
+};
+
+
+    const renderTodos = todos => {
+      todoListElement.innerHTML = '';
+
+      if (todos.length === 0) {
+        todoListElement.innerHTML = 'No todos found';
+        return;
+      }
+
+      const ulElement = document.createElement('ul');
+      todos.forEach(todo => {
+        const liElement = document.createElement('li');
+        liElement.textContent = `Title: ${todo.title}, Description: ${todo.description}`;
+        ulElement.appendChild(liElement);
+      });
+
+      todoListElement.appendChild(ulElement);
+    };
+  </script>
+</body>
+</html>

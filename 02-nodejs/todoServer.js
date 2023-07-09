@@ -39,15 +39,19 @@
 
   Testing the server - run `npm run test-todoServer` command in terminal
  */
+
+  const cors = require("cors");
 const express = require("express");
 const fs = require("fs");
 const app = express();
 
 const router = express.Router();
+app.use(cors());
 app.use(express.json());
 app.use("/", router);
 
 const dataPath = __dirname + "/data.json";
+
 
 // Read the initial todos from the data.json file
 let todos = [];
@@ -75,36 +79,36 @@ router.get("/todos/:id", (req, res) => {
 
 router.post("/todos", (req, res) => {
   const todo = req.body;
-  const ctodo = { ...todo, id: Math.floor(Math.random() * 1000000) };
-  todos.push(ctodo);
+  const newtodo = { ...todo, id: Math.floor(Math.random() * 20) };
+  todos.push(newtodo);
   writeDataToFile();
-  res.status(201).send("Todo added");
+  res.status(201).json(newtodo);
 });
 
 router.put("/todos/:id", (req, res) => {
   const body = req.body;
   const id = +req.params.id;
   const todoIndex = todos.findIndex((t) => t.id === id);
-  const todo = todos[todoIndex];
+  // const todo = todos[todoIndex];
   if (todoIndex === -1) {
     res.status(404).send("Not found");
   } else {
     todos.splice(todoIndex, 1, { ...body, id: id });
     writeDataToFile();
-    res.status(200).send("Updated");
+    res.status(200).json({message : "updated"});
   }
 });
 
 router.delete("/todos/:id", (req, res) => {
   const id = +req.params.id;
   const todoIndex = todos.findIndex((t) => t.id === id);
-  const todo = todos[todoIndex];
-  if (todo) {
-    todos.splice(todoIndex, 1);
+  // const todo = todos[todoIndex];
+  if (todoIndex===-1) {
+     res.status(404).send("Not found");
+  } else {todos.splice(todoIndex, 1);
     writeDataToFile();
-    res.status(200).send("Deleted");
-  } else {
-    res.status(404).send("Not found");
+    res.status(200).json({message : "deleted"});
+   
   }
 });
 
@@ -112,9 +116,9 @@ app.listen(3000, () => {
   console.log("Server started");
 });
 
-app.use("*", (req, res) => {
-  res.status(404).send("Route not found");
-});
+// app.use("*", (req, res) => {
+//   res.status(404).send("Route not found");
+// });
 
 function writeDataToFile() {
   const jsonData = { todos };
